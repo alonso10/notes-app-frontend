@@ -1,14 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom'
-import {
-  Box,
-  Button,
-  Container,
-  TextField,
-  Typography,
-  Paper,
-  Link,
-} from '@mui/material'
+import { Box, Button, TextField, Typography, Paper, Link } from '@mui/material'
 import { useAuth } from '../context/AuthContext'
 import AuthLayout from '../layouts/AuthLayout'
 
@@ -19,7 +11,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const { register } = useAuth()
+  const { register, hasError, errorMessage, loading } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,12 +32,13 @@ export default function Register() {
       return
     }
 
-    try {
-      await register(name, email, password)
-      navigate('/dashboard')
-    } catch (err) {
-      setError('Registration failed. Please try again.')
+    await register(name, email, password)
+    if (hasError) {
+      setError(errorMessage)
+      return
     }
+
+    navigate('/dashboard')
   }
 
   return (
@@ -126,6 +119,7 @@ export default function Register() {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
+              loading={loading}
             >
               Sign Up
             </Button>

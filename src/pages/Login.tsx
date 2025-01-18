@@ -7,18 +7,17 @@ import AuthLayout from '../layouts/AuthLayout'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, hasError, errorMessage, loading } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    try {
-      await login(email, password)
-      navigate('/dashboard')
-    } catch (err) {
-      setError('Invalid email or password')
+
+    await login(email, password)
+    if (hasError) {
+      return
     }
+    navigate('/dashboard')
   }
 
   return (
@@ -56,7 +55,7 @@ export default function Login() {
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              error={!!error}
+              error={hasError}
             />
             <TextField
               margin="normal"
@@ -69,13 +68,14 @@ export default function Login() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              error={!!error}
-              helperText={error}
+              error={hasError}
+              helperText={errorMessage}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
+              loading={loading}
               sx={{ mt: 3, mb: 2 }}
             >
               Sign In
