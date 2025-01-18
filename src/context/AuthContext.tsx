@@ -46,11 +46,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!response.ok) throw new Error('Registration failed')
 
       await login(email, password)
-      setLoading(false)
     } catch (error) {
       console.error('Registration error:', error)
       setHasError(true)
       setErrorMessage('Registration failed. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -69,12 +70,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const authData = await response.json()
       setAuth(authData)
       localStorage.setItem('data', JSON.stringify(authData))
-      setLoading(false)
     } catch (error) {
       console.error('Login error:', error)
       setHasError(true)
       setErrorMessage('Invalid email or password')
-    }
+    } finally {
+      setLoading(false)
+    }    
   }
 
   const logout = () => {
