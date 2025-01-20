@@ -12,7 +12,9 @@ interface NotesContextType {
   deleteNote: (id: number) => Promise<void>
   loading: boolean
   hasError: boolean
-  errorMessage: string
+  errorMessage: string,
+  success: boolean
+  successMessage: string
 }
 
 const NotesContext = createContext<NotesContextType | undefined>(undefined)
@@ -25,6 +27,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(false)
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
     const storedNotes = localStorage.getItem('notes')
@@ -38,6 +42,16 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({
     setErrorMessage('')
   }
 
+  const setSuccessProcess = (message: string) => {
+    setSuccessMessage(message)
+    setSuccess(true)
+  }
+
+  const setErrorProcess = (message: string) => {
+    setErrorMessage(message)
+    setHasError(true)
+  }
+
   const fetchNotes = async () => {
     try {
       resetError()
@@ -47,8 +61,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({
       })
 
       if (!response.ok) {
-        setHasError(true)
-        setErrorMessage('Failed to fetch notes. Please try again.')
+        setErrorProcess('Failed to fetch notes. Please try again.')
+        return
       }
 
       const notesData = await response.json()
@@ -56,8 +70,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({
       localStorage.setItem('notes', JSON.stringify(notesData))      
     } catch (error) {
       console.error('Fetch notes error:', error)
-      setHasError(true)
-      setErrorMessage('Failed to fetch notes. Please try again.')
+      setErrorProcess('Failed to fetch notes. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -79,17 +92,16 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({
       })
 
       if (!response.ok) {
-        setHasError(true)
-        setErrorMessage('Failed to add note. Please try again.')
+        setErrorProcess('Failed to add note. Please try again.')
         return
       }
 
       const newNote = await response.json()
-      setNotes((prev) => [...prev, newNote])      
+      setNotes((prev) => [...prev, newNote])
+      setSuccessProcess('Note added successfully')      
     } catch (error) {
       console.error('Add note error:', error)
-      setHasError(true)
-      setErrorMessage('Failed to add note. Please try again.')
+      setErrorProcess('Failed to add note. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -109,12 +121,11 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({
       })
 
       if (!response.ok) {
-        setHasError(true)
         if (response.status === 409) {
-          setErrorMessage('Conflict when updating the note. It is possible that it is blocked or a deadlock was generated. Please try again.')
+          setErrorProcess('Conflict when updating the note. It is possible that it is blocked or a deadlock was generated. Please try again.')
           return
         }
-        setErrorMessage('Failed to update note. Please try again.')
+        setErrorProcess('Failed to update note. Please try again.')
         return
       }
 
@@ -122,10 +133,10 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({
       setNotes((prev) =>
         prev.map((note) => (note.id === Number(id) ? updatedNote : note)),
       )
+      setSuccessProcess('Note updated successfully')
     } catch (error) {
       console.error('Update note error:', error)
-      setErrorMessage('Failed to update note. Please try again.')
-      setHasError(true)
+      setErrorProcess('Failed to update note. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -141,16 +152,15 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({
       })
 
       if (!response.ok) {
-        setHasError(true)
-        setErrorMessage('Failed to delete note. Please try again.')
+        setErrorProcess('Failed to delete note. Please try again.')
         return
       }
 
       setNotes((prev) => prev.filter((note) => note.id !== Number(id)))
+      setSuccessProcess('Note deleted successfully')
     } catch (error) {
       console.error('Delete note error:', error)
-      setHasError(true)
-      setErrorMessage('Failed to delete note. Please try again.')
+      setErrorProcess('Failed to delete note. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -158,7 +168,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <NotesContext.Provider
-      value={{ notes, fetchNotes, addNote, updateNote, deleteNote, loading, hasError, errorMessage }}
+      value={{ notes, fetchNotes, addNote, updateNote, deleteNote, loading, hasError, errorMessage, success, successMessage }}
     >
       {children}
     </NotesContext.Provider>

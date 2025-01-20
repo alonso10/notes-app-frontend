@@ -11,6 +11,12 @@ import {
   Avatar,
   IconButton,
   Divider,
+  Snackbar,
+  Slide,
+  SlideProps,
+  Alert,
+  Backdrop,
+  CircularProgress,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -22,12 +28,17 @@ import { useAuth } from '../context/AuthContext'
 import MainLayout from '../layouts/MainLayout'
 import { ModalConfirmDelete } from '../components/modal/ConfirmDeleteNote'
 
+function SlideTransition(props: SlideProps) {
+  return <Slide {...props} direction="down" />;
+}
+
 export default function Dashboard() {
-  const { notes, fetchNotes, deleteNote } = useNotes()
+  const { notes, fetchNotes, deleteNote, hasError, errorMessage, loading, success, successMessage } = useNotes()
   const { auth } = useAuth()
   const navigate = useNavigate()
   const [openModalDeletem, setOpenModalDelete] = useState(false)
   const [noteToDelete, setNoteToDelete] = useState<number | null>(null)
+  const [openNotification, setOpenNotification] = useState(false)
 
   useEffect(() => {
     if (!auth) {
@@ -37,16 +48,16 @@ export default function Dashboard() {
     fetchNotes()
   }, [auth, navigate])
 
+  useEffect(() => {
+    setOpenNotification(hasError || success)
+  }, [hasError, success])
+
   const handleEdit = (id: number) => {
     navigate(`/note/${id}`)
   }
 
   const handleDelete = async (id: number) => {
-    try {
-      await deleteNote(id)
-    } catch (error) {
-      console.error('Error deleting note:', error)
-    }
+    await deleteNote(id)
   }
 
   return (
@@ -144,6 +155,27 @@ export default function Dashboard() {
           setNoteToDelete(null)
         }}
       />
+      <Snackbar
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        open={openNotification}
+        autoHideDuration={2000}
+        TransitionComponent={SlideTransition}
+        onClose={() => setOpenNotification(false)}
+      >
+        <Alert          
+          severity={hasError ? 'error' : 'success'}
+          sx={{ width: '100%' }}
+          onClose={() => setOpenNotification(false)}
+        >
+          {hasError ? errorMessage : successMessage}
+        </Alert>
+      </Snackbar>
+      <Backdrop
+        sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
+        open={loading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </MainLayout>
   )
 }
