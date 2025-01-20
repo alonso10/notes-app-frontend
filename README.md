@@ -22,7 +22,7 @@ Este proyecto es una aplicación de notas construida con React, TypeScript y Vit
 
 3. Crea un archivo  en la raíz del proyecto y configura las variables de entorno necesarias:
     ```env
-    VITE_API_URL=http://localhost:3000
+    API_URL=http://localhost:3000
     ```
 
 ## Scripts Disponibles
